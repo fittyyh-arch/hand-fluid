@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Fluid - 手势流体</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="fluid-canvas"></canvas>
+    <video id="camera" autoplay playsinline></video>
+
+    <div id="overlay">
+        <div id="start-screen">
+            <h1>🌊 手势流体</h1>
+            <p>用手掌推动屏幕上的流体</p>
+            <button id="start-btn">开启摄像头</button>
+            <p class="hint">也可以用鼠标/触摸拖拽体验</p>
+        </div>
+    </div>
+
+    <div id="status" class="hidden">
+        <span id="fps">0 FPS</span>
+        <span id="hand-status">🖐️ 等待手部...</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.min.js"></script>
+    <script src="fluid.js"></script>
+    <script src="hand-tracking.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
