@@ -22,7 +22,7 @@ class HandTracker {
         this.hands.onResults((results) => this._processResults(results));
 
         const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'user', width: 640, height: 480 }
+            video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } }
         });
         this.video.srcObject = stream;
 
@@ -30,8 +30,8 @@ class HandTracker {
             onFrame: async () => {
                 await this.hands.send({ image: this.video });
             },
-            width: 640,
-            height: 480
+            width: 1920,
+            height: 1080
         });
         this.camera.start();
     }
