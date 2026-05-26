@@ -10,10 +10,10 @@ class FluidSimulation {
         this.dyeHeight = 1024;
 
         this.dt = 0.016;
-        this.dissipation = 0.97;
+        this.dissipation = 0.985;
         this.pressureIterations = 20;
-        this.curl = 30;
-        this.splatRadius = 0.005;
+        this.curl = 45;
+        this.splatRadius = 0.008;
 
         this._resize();
         this._initGL();
@@ -100,6 +100,7 @@ class FluidSimulation {
         this.dye = this._createDoubleFBO(this.dyeWidth, this.dyeHeight, type);
         this.divergenceFBO = this._createFBO(this.simWidth, this.simHeight, type);
         this.curlFBO = this._createFBO(this.simWidth, this.simHeight, type);
+        this.bloomFBO = this._createFBO(this.dyeWidth, this.dyeHeight, type);
     }
 
     _initGL() {
@@ -225,12 +226,39 @@ class FluidSimulation {
                     gl_FragColor = vec4(vel, 0.0, 1.0);
                 }
             `),
+            bloom: this._createProgram(baseVS, `
+                precision highp float;
+                varying vec2 vUv;
+                uniform sampler2D uTexture;
+                uniform vec2 texelSize;
+                void main() {
+                    vec3 sum = vec3(0.0);
+                    float weights[5];
+                    weights[0] = 0.227027;
+                    weights[1] = 0.1945946;
+                    weights[2] = 0.1216216;
+                    weights[3] = 0.054054;
+                    weights[4] = 0.016216;
+                    for (int i = 0; i < 5; i++) {
+                        float offset = float(i) * 2.0;
+                        sum += texture2D(uTexture, vUv + vec2(texelSize.x * offset, 0.0)).rgb * weights[i];
+                        sum += texture2D(uTexture, vUv - vec2(texelSize.x * offset, 0.0)).rgb * weights[i];
+                        sum += texture2D(uTexture, vUv + vec2(0.0, texelSize.y * offset)).rgb * weights[i];
+                        sum += texture2D(uTexture, vUv - vec2(0.0, texelSize.y * offset)).rgb * weights[i];
+                    }
+                    gl_FragColor = vec4(sum * 0.5, 1.0);
+                }
+            `),
             display: this._createProgram(baseVS, `
                 precision highp float;
                 varying vec2 vUv;
                 uniform sampler2D uTexture;
+                uniform sampler2D uBloom;
                 void main() {
-                    vec3 c = texture2D(uTexture, vUv).rgb;
+                    vec3 base = texture2D(uTexture, vUv).rgb;
+                    vec3 bloom = texture2D(uBloom, vUv).rgb;
+                    vec3 c = base + bloom * 1.2;
+                    c = 1.0 - exp(-c * 1.5);
                     gl_FragColor = vec4(c, 1.0);
                 }
             `)
@@ -370,10 +398,21 @@ class FluidSimulation {
 
     render() {
         const gl = this.gl;
-        const u = this._useProgram(this.programs.display);
+
+        let u = this._useProgram(this.programs.bloom);
+        gl.uniform2f(u.texelSize, 1.0 / this.dyeWidth, 1.0 / this.dyeHeight);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.dye.read.texture);
         gl.uniform1i(u.uTexture, 0);
+        this._blit(this.bloomFBO);
+
+        u = this._useProgram(this.programs.display);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.dye.read.texture);
+        gl.uniform1i(u.uTexture, 0);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.bloomFBO.texture);
+        gl.uniform1i(u.uBloom, 1);
         this._blit(null);
     }
 }

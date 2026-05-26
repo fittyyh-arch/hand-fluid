@@ -1,10 +1,10 @@
 const FINGER_COLORS = [
-    [1.0, 0.2, 0.1],   // thumb - red
-    [0.1, 0.5, 1.0],   // index - blue
-    [0.1, 1.0, 0.3],   // middle - green
-    [1.0, 0.8, 0.1],   // ring - yellow
-    [0.8, 0.1, 1.0],   // pinky - purple
-    [1.0, 0.5, 0.2],   // palm - orange
+    [1.0, 0.3, 0.5],   // thumb - rose
+    [0.3, 0.6, 1.0],   // index - sky blue
+    [0.2, 1.0, 0.8],   // middle - cyan/mint
+    [1.0, 0.6, 0.9],   // ring - pink
+    [0.6, 0.3, 1.0],   // pinky - violet
+    [0.4, 0.9, 1.0],   // palm - aqua
 ];
 
 let fluid, tracker;
@@ -83,7 +83,7 @@ function onHandResults(deltas, hasHands) {
 
     deltas.forEach(d => {
         const color = FINGER_COLORS[d.fingerIdx] || FINGER_COLORS[5];
-        const strength = 40;
+        const strength = 60;
         fluid.splat(d.x, d.y, d.dx * strength, d.dy * strength, color);
     });
 }
